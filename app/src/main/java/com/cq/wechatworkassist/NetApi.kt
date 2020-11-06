@@ -6,7 +6,7 @@ import java.io.IOException
 object NetApi {
     val okhttpclient = OkHttpClient().newBuilder().build()
     fun uploadStatus(phone: String, name: String?, status: String) {
-        val httpUrl = HttpUrl.Builder().scheme("http").host("qa5.inagora.org")
+        val httpUrl = HttpUrl.Builder().scheme("https").host("mapi.wandougongzhu.cn")
 //                                        .addPathSegment("uploadStatus")
                                         .addQueryParameter("phone", phone)
             .addQueryParameter("name", name)
