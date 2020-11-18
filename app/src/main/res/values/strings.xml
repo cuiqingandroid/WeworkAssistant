@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WechatWorkAssist</string>
+    <string name="app_name">企业微信助手</string>
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
@@ -10,10 +10,21 @@
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
 
-    <string name="aby_label">A智能小精灵</string>
-    <string name="aby_desc">智能小精灵</string>
+    <string name="aby_label">企业微信助手</string>
+    <string name="aby_desc">智能按键精灵</string>
     <string name="aby_setting_title">【辅助功能(无障碍)】设置</string>
     <string name="common_ok">OK</string>
     <string name="setting">设置</string>
     <string name="language">语言设置</string>
+
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">cuiqing</string>
+    <string name="nav_header_subtitle">cuiqing827@gmail.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+
+    <string name="menu_home">首页</string>
+    <string name="menu_gallery">任务</string>
+    <string name="menu_slideshow">关于</string>
 </resources>

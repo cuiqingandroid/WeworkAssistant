@@ -23,15 +23,16 @@ public class AccessibilityUtil {
      *
      * @param service 辅助服务
      */
-    public static void checkSetting(final Context cxt, Class service) {
+    public static boolean checkSetting(final Context cxt, Class service) {
         if (isSettingOpen(service, cxt))
-            return;
+            return true;
         new AlertDialog.Builder(cxt)
                 .setTitle(R.string.aby_setting_title)
                 .setMessage("找到【"+ cxt.getString(R.string.aby_label)+"】并开启")
                 .setPositiveButton(R.string.common_ok, (dialog, which) -> jumpToSetting(cxt))
                 .setCancelable(false)
                 .show();
+        return false;
     }
 
     /**
