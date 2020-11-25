@@ -73,8 +73,17 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 
                 return true
             }
+            mTopActivityName?.apply {
+                if (!ACTIVITY_MAP.contains(this)) {
+                    pressBack()
+                }
+                return false
+            }
             FloatWindowManager.setText("正在运行${mRunningTask?.phone}")
             if (ACTIVITY_MAIN == mTopActivityName) {
+                // 增加当前tab的判断
+
+
                 // 判断加微信菜单是否显示
                 if (findViewByText("加微信")) {
                     val rootNode = rootInActiveWindow
@@ -183,6 +192,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                 if (hasAdd) {
                     if (view.getChild(1).text.toString() == mRunningTask!!.phone) {
                         findViewIdClick(getViewContactInfoAddBtn())
+                        mRunningTask?.hasSearched = true
                     } else {
                         pressBack()
                         mHandler.postDelayed({pressBack()}, RandUtil.randomInt(500, 1000))
@@ -193,25 +203,30 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                 if (companyName == "") {
                     companyName = findViewIdText(getViewSendVerifyCompany()) ?: ""
                 }
-                val welcomeText = findViewIdText(getViewSendVerifyWelcome())
-                if (welcomeText == mRunningTask?.content) {
-                    if (findViewIdClick(getViewSendVerifyButton())) {
-                        val phone = mRunningTask!!.phone
-                        val name = mRunningTask!!.name
-                        mRunningTask = null
-                        mHandler.postDelayed({pressBack()},
-                            RandUtil.randomLong(500,1000))
-                        mHandler.postDelayed({pressBack()},
-                            RandUtil.randomLong(2000,3000))
-                        // 上报成功
-                        TaskManager.onTaskEnd(phone, name, STATUS_SUCCESS)
-                    }
-                } else {
-                    tapViewById(getViewSendVerifyWelcomeParent())
+                if (mRunningTask?.hasSearched == true) {
+                    val welcomeText = findViewIdText(getViewSendVerifyWelcome())
+                    if (welcomeText == mRunningTask?.content) {
+                        if (findViewIdClick(getViewSendVerifyButton())) {
+                            val phone = mRunningTask!!.phone
+                            val name = mRunningTask!!.name
+                            mRunningTask = null
+                            mHandler.postDelayed({pressBack()},
+                                RandUtil.randomLong(500,1000))
+                            mHandler.postDelayed({pressBack()},
+                                RandUtil.randomLong(2000,3000))
+                            // 上报成功
+                            TaskManager.onTaskEnd(phone, name, STATUS_SUCCESS)
+                        }
+                    } else {
+                        tapViewById(getViewSendVerifyWelcomeParent())
 //                    mHandler.postDelayed({
                         findViewIdSetText(getViewSendVerifyWelcome(), mRunningTask?.content)
 //                        pressBack()
 //                    }, RandUtil.randomInt(1000,3000))
+                    }
+                } else {
+                    pressBack()
+                    pressBack()
                 }
             }
         }
@@ -549,6 +564,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     companion object {
         var service: AccessibilityService? = null
         private const val TAG = "wework_assist"
+
         private const val ACTIVITY_MAIN = "com.tencent.wework.launch.WwMainActivity"
         private const val ACTIVITY_ADD_FRIEND = "com.tencent.wework.friends.controller.FriendAddMenu3rdActivity"
         private const val ACTIVITY_ADD_FRIEND_SEARCH = "com.tencent.wework.friends.controller.WechatFriendAddSearchActivity"
@@ -558,5 +574,9 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
         private const val ACTIVITY_FRIEND_ADD_MULTI = "com.tencent.wework.friends.controller.FriendAddMultiIdentityActivity"
         private const val ACTIVITY_FRIEND_COMPANY = "com.tencent.wework.contact.controller.ContactDetailBriefInfoProfileActivity"
         private const val ACTIVITY_FRIEND_COMPANY_DETAIL = "com.tencent.wework.contact.controller.ContactDetailActivity"
+        private val ACTIVITY_MAP = setOf(ACTIVITY_MAIN,ACTIVITY_ADD_FRIEND,ACTIVITY_ADD_FRIEND_SEARCH,
+            ACTIVITY_CONTACT_INFO,ACTIVITY_CONTACT_SEND_VERIFY,ACTIVITY_CONTACT_SEND_EXISTS,ACTIVITY_FRIEND_ADD_MULTI,
+            ACTIVITY_FRIEND_COMPANY,ACTIVITY_FRIEND_COMPANY_DETAIL
+            )
     }
 }
