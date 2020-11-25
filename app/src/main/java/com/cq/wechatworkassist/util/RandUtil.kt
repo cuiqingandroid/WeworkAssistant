@@ -15,12 +15,20 @@ object RandUtil {
      * 生成随机数，介于start-end之间
      */
     fun randomInt(start: Int, end : Int) : Long{
-        return (start + r.nextInt(end- start)).toLong()
+        var step = end - start
+        if (step <= 0) {
+            step = 1
+        }
+        return (start + r.nextInt(step)).toLong()
     }
     /**
      * 生成随机数，介于start-end之间
      */
     fun randomLong(start: Int, end : Int) : Long{
-        return (start + r.nextInt(end- start)).toLong()
+        var step = end - start
+        if (step <= 0) {
+            step = 1
+        }
+        return (start + r.nextInt(step)).toLong()
     }
 }
