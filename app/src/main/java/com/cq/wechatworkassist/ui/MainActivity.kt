@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -15,9 +16,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.Navigation
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.NavigationUI
-import androidx.navigation.ui.setupWithNavController
 import com.cq.wechatworkassist.*
-import com.cq.wechatworkassist.camera.CameraActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 
@@ -40,7 +39,7 @@ class MainActivity : AppCompatActivity() {
                 FloatWindowManager.removeBallView(this)
             } else {
                 if (AccessibilityUtil.checkSetting(this, AccessibilityService::class.java)) {
-                    if (WindowManager.checkFloatPermission(this)) {
+                    if (PermissionManager.checkFloatPermission(this)) {
                         FloatWindowManager.addBallView(this)
                     } else {
                         showFloatDialog()
@@ -62,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             Navigation.findNavController(this, R.id.nav_host_fragment)
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration!!)
         NavigationUI.setupWithNavController(navigationView, navController)
+//        NavigationUI.setupWithNavController(toolbar, navController)
 
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             run {
@@ -87,7 +87,7 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
-            if (WindowManager.checkFloatPermission(this)) {
+            if (PermissionManager.checkFloatPermission(this)) {
                 Toast.makeText(this, "悬浮窗权限申请成功", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "悬浮窗权限申请失败", Toast.LENGTH_SHORT).show()
@@ -106,10 +106,16 @@ class MainActivity : AppCompatActivity() {
     }
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
+//        menuInflater.inflate(R.menu.main, menu)
         val navController =
             Navigation.findNavController(this, R.id.nav_host_fragment)
-        return true
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val navController =
+            Navigation.findNavController(this, R.id.nav_host_fragment)
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -8,22 +8,20 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
+import android.view.*
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.cq.wechatworkassist.*
+import com.cq.wechatworkassist.util.NetworkUtil
+import com.cq.wechatworkassist.util.RootUtil
+import com.cq.wechatworkassist.wework.WEWORK_VERSION
+import com.cq.wechatworkassist.wework.isWeworkInstall
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 
 
 /**
- * A simple [Fragment] subclass as the default destination in the navigation.
+ * 检测各种状态
  */
 class HomeFragment : Fragment() {
 
@@ -37,27 +35,13 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-//        view.findViewById<Button>(R.id.button_first).setOnClickListener {
-//            execCommand("ls")
-//        }
         Log.d("cuiqing", NetworkUtil.getLocalIpAddress())
-        Log.d(
-            "cuiqing",
-            NetworkUtil.getSelfIp(requireActivity())
-        )
-        Log.d("cuiqing", "isroot:" + RootCheck.isRoot())
-
-
-
-//        view.findViewById<Button>(R.id.btnStart).setOnClickListener {
-//            val intent = Intent("add_task")
-//            intent.putExtra("tasks", "15578314513,你好")
-//            activity?.sendBroadcast(intent)
-//        }
-
+        Log.d("cuiqing", NetworkUtil.getSelfIp(requireActivity()))
+        Log.d("cuiqing", "isroot:" + RootUtil.isRoot())
+        setHasOptionsMenu(true)
     }
 
-    fun requestFloatPermission(context: Context?) {
+    private fun requestFloatPermission(context: Context?) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val intent2 = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
             startActivityForResult(intent2, 1)
@@ -71,46 +55,30 @@ class HomeFragment : Fragment() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 1) {
-            if (WindowManager.checkFloatPermission(activity)) {
-                Toast.makeText(activity, "悬浮窗权限申请成功", Toast.LENGTH_SHORT)
+            if (PermissionManager.checkFloatPermission(activity)) {
+                Toast.makeText(activity, "悬浮窗权限申请成功", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(activity, "悬浮窗权限申请失败", Toast.LENGTH_SHORT)
+                Toast.makeText(activity, "悬浮窗权限申请失败", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        val isRoot = RootCheck.hasRootPermission()
-        Log.d("cuiqing", "root权限$isRoot")
-        if (isRoot) {
-            view?.tvRootStatus?.text = "已获得"
+        val isWeworkInstall = isWeworkInstall()
+        Log.d("cuiqing", "企业微信是否安装$isWeworkInstall")
+        if (isWeworkInstall) {
+            view?.tvRootStatus?.text = WEWORK_VERSION
         } else {
-            view?.tvRootStatus?.text = "无root权限"
+            view?.tvRootStatus?.text = "企业微信未安装"
         }
-        val isAccessOpen =
-            AccessibilityUtil.isSettingOpen(
-                AccessibilityService::class.java,
-                activity
-            )
+        val isAccessOpen = AccessibilityUtil.isSettingOpen(AccessibilityService::class.java, context)
         view?.tvAccessStatus?.text = if (isAccessOpen) "已开启" else "请到设置开启智能辅助"
-//        if (AccessibilityUtil.checkSetting(
-//                activity,
-//                AccessibilityService::class.java
-//            )
-//        ) {
-            if (WindowManager.checkFloatPermission(
-                    activity
-                )
-            ) {
-                tvFloatStatus.text = "已获得"
-            } else {
-//                requestFloatPermission(activity)
-//                showFloatDialog()
-                tvFloatStatus.text = "未获得"
-            }
-//        }
-//        execCommand("input keyevent 4")
+        if (PermissionManager.checkFloatPermission(activity)) {
+            tvFloatStatus.text = "已获得"
+        } else {
+            tvFloatStatus.text = "未获得"
+        }
     }
 
     fun showFloatDialog() {
@@ -122,6 +90,14 @@ class HomeFragment : Fragment() {
             ) { _, _ -> requestFloatPermission(activity) }
             .setCancelable(false)
             .show()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return super.onOptionsItemSelected(item)
     }
 
 }

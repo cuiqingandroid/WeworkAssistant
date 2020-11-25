@@ -1,4 +1,4 @@
-package com.cq.wechatworkassist
+package com.cq.wechatworkassist.util
 
 import android.annotation.SuppressLint
 import android.content.Context

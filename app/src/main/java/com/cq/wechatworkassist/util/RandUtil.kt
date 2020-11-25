@@ -1,8 +1,8 @@
-package com.cq.wechatworkassist
+package com.cq.wechatworkassist.util
 
 import java.util.*
 
-object Util {
+object RandUtil {
     private val r = Random()
     fun randomInt(bount : Int) : Int{
         return r.nextInt(bount)

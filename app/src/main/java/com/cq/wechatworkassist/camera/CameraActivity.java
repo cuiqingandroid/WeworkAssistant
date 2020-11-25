@@ -58,8 +58,8 @@ public class CameraActivity extends Activity implements CameraInterface.CamOpenO
 	}
 
 	private void initUI(){
-		surfaceView = (CameraSurfaceView)findViewById(R.id.camera_surfaceview);
-		shutterBtn = (ImageButton)findViewById(R.id.btn_shutter);
+		surfaceView = findViewById(R.id.camera_surfaceview);
+		shutterBtn = findViewById(R.id.btn_shutter);
 	}
 	private void initViewParams(){
 		LayoutParams params = surfaceView.getLayoutParams();

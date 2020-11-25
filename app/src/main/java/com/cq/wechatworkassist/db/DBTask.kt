@@ -3,16 +3,11 @@ package com.cq.wechatworkassist.db
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import com.cq.wechatworkassist.Task
-import com.cq.wechatworkassist.db.SqlHelper
+import com.cq.wechatworkassist.task.Task
 import java.util.*
 
-/**
- * Created by cuiqing on 2015/8/5.
- */
 object DBTask {
-    const val TABLE_NAME = "db_phone_task"
-    @JvmStatic
+    private const val TABLE_NAME = "db_phone_task"
     fun createTable(db: SQLiteDatabase) {
         // 创建表
         val sql = StringBuilder()
@@ -31,9 +26,14 @@ object DBTask {
         db.execSQL(sql.toString())
     }
 
+    fun onUpgrade( db: SQLiteDatabase,oldVersion: Int, newVersion: Int) {
+        db.execSQL("drop table $TABLE_NAME")
+        createTable(db)
+    }
+
     fun insertTasks(tasks: List<Task>) {
         try {
-            val db = SqlHelper.getInstance().readableDatabase
+            val db = SqlHelper.getWritableDatabase()
             for (task in tasks) {
                 val cv = ContentValues()
                 cv.put(Column.PHONE, task.phone)
@@ -48,17 +48,21 @@ object DBTask {
 
     fun queryTasks(): List<Task> {
         try {
-            val tasks: MutableList<Task> =
-                ArrayList()
-            val db = SqlHelper.getInstance().readableDatabase
+            val tasks = mutableListOf<Task>()
+            val db = SqlHelper.getReadableDatabase()
             val c =
                 db.query(TABLE_NAME, null, null, null, null, null, null)
-            while (c.moveToNext()) {
-                val task =
-                    Task(c.getString(1), c.getString(2))
-                task.status = c.getString(3)
-                task.name = c.getString(4)
-                tasks.add(task)
+            c.use {
+                while (c.moveToNext()) {
+                    val task =
+                        Task(
+                            c.getString(1),
+                            c.getString(2)
+                        )
+                    task.status = c.getString(3)
+                    task.name = c.getString(4)
+                    tasks.add(task)
+                }
             }
             return tasks
         } catch (e: Throwable) {
@@ -69,13 +73,15 @@ object DBTask {
 
     fun queryUnDoneTask(): Task? {
         try {
-            val db = SqlHelper.getInstance().readableDatabase
+            val db = SqlHelper.getReadableDatabase()
             val c = db.rawQuery("select * from $TABLE_NAME where status is NULL",
                 null,
                 null
             )
-            while (c.moveToNext()) {
-                return Task(c.getString(1), c.getString(2))
+            c.use {
+                while (c.moveToNext()) {
+                    return Task( c.getString(1),c.getString(2))
+                }
             }
         } catch (e: Throwable) {
             e.printStackTrace()
@@ -83,9 +89,9 @@ object DBTask {
         return null
     }
 
-    fun updatePhoneStatus(phone: String, name:String?, status: String) {
+    fun updatePhoneStatus(phone: String, name:String?, status: Int) {
         try {
-            val db = SqlHelper.getInstance().readableDatabase
+            val db = SqlHelper.getWritableDatabase()
             val cv = ContentValues()
             cv.put(Column.PHONE, phone)
             cv.put(Column.NAME, name?: "")

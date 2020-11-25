@@ -4,10 +4,7 @@ import android.accessibilityservice.GestureDescription
 import android.accessibilityservice.GestureDescription.StrokeDescription
 import android.annotation.SuppressLint
 import android.app.Service
-import android.content.BroadcastReceiver
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Path
 import android.graphics.Rect
 import android.os.Build
@@ -18,7 +15,9 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
-import com.cq.wechatworkassist.NetApi.uploadStatus
+import com.cq.wechatworkassist.task.*
+import com.cq.wechatworkassist.util.RandUtil
+import com.cq.wechatworkassist.wework.*
 
 
 /**
@@ -34,7 +33,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
             super.handleMessage(msg)
             if (!checkUi()) {
                 removeMessages(0)
-                sendEmptyMessageDelayed(0, Util.randomInt(1500, 3000))
+                sendEmptyMessageDelayed(0, RandUtil.randomInt(1500, 3000))
             }
         }
     }
@@ -48,8 +47,8 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 //            }
 //            mTopActivityName = tryGetActivity()
             if (rootInActiveWindow == null){
-                inputTap(Util.randomInt(700).toFloat(), Util.randomInt(120).toFloat())
-                mHandler.sendEmptyMessageDelayed(0, Util.randomLong(500))
+                inputTap(RandUtil.randomInt(700).toFloat(), RandUtil.randomInt(120).toFloat())
+                mHandler.sendEmptyMessageDelayed(0, RandUtil.randomLong(500))
                 return true
             }
             if (!isRootFullscreen()) {
@@ -58,7 +57,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
             }
             log("checkui ${mRunningTask?.phone} topActivityName:$mTopActivityName")
             // 检测企业微信是否开启
-            if (mTopActivityName?.contains("com.tencent.wework") != true) {
+            if (mTopActivityName?.contains(WEWORK_PACKAGE) != true) {
                 FloatWindowManager.setText("请打开企业微信")
 //                startWechatWorkMain()
                 mHandler.sendEmptyMessageDelayed(0, 10000)
@@ -78,38 +77,34 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     val rootNode = rootInActiveWindow
                     if (rootNode != null) {
                         val nodes =
-                            rootNode.findAccessibilityNodeInfosByViewId("com.tencent.wework:id/ec6")
-                        if (nodes != null && !nodes.isEmpty()) {
-//                                Log.i(TAG, "findTxtClick: " + viewId + ", " + nodes.size() + ", " + nodes);
-                            nodes[1].parent
-                                .performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            rootNode.findAccessibilityNodeInfosByViewId(getViewIdAddWechat())
+                        if (nodes != null && nodes.isNotEmpty()) {
+                            nodes[1].parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
                         }
                     }
                 } else {
-                    findViewIdClick("com.tencent.wework:id/hxm")
+                    findViewIdClick(getViewIdAdd())
                 }
             }
             if (ACTIVITY_ADD_FRIEND == mTopActivityName) {
-//                    findViewIdParentClick("com.tencent.wework:id/gif")
-                val view = findViewIdFirst("com.tencent.wework:id/gif")
+                val view = findViewIdFirst(getViewIdSearchPhone())
                 if (view != null) {
-//                    inputTap(480f, 360f)
-                    tapViewById("com.tencent.wework:id/gif")
+                    tapViewById(getViewIdSearchPhone())
                 }
             }
             if (ACTIVITY_FRIEND_ADD_MULTI == mTopActivityName) {
                 findViewIdClick("com.tencent.wework:id/bs9")
             }
             if (ACTIVITY_ADD_FRIEND_SEARCH == mTopActivityName) {
-                if (findViewByText("操作异常，暂无法使用")) {
+                if (findViewByText(WEWORK_UI_TEXT_OPERATION_LIMIT)) {
                     val phone = mRunningTask!!.phone
                     val name = mRunningTask!!.name
                     mRunningTask = null
-                    uploadStatus(phone, name, "操作频繁")
+                    TaskManager.onTaskEnd(phone, name, STATUS_OPERATION_LIMIT)
                     return false
                 }
-                val unexists = findViewIdText("com.tencent.wework:id/bjr")
-                if (unexists == "该用户不存在") {
+                val unexists = findViewByText(WEWORK_UI_TEXT_USER_NOT_EXISTS)
+                if (unexists) {
                     val phone = mRunningTask!!.phone
                     val name = mRunningTask!!.name
                     mRunningTask = null
@@ -119,22 +114,20 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                         { pressBack() },
                         2000
                     )
-                    uploadStatus(phone, name, "手机号查不到")
+                    TaskManager.onTaskEnd(phone, name, STATUS_UNKNOWN_PHONE)
                     return false
                 }
 
-                val searchTextView = findViewIdFirst("com.tencent.wework:id/ghu")
+                val searchTextView = findViewIdFirst(getViewIdEdSearchPhone())
                 if (searchTextView == null) {
                     pressBack()
                     return false
                 }
                 if (searchTextView.text.toString() == mRunningTask?.phone) {
                     // 点击搜索结果
-//                    inputTap(480f, 280f)
-//                    findViewIdClick("com.tencent.wework:id/dqw")
-                    tapViewById("com.tencent.wework:id/dqw")
+                    tapViewById(getViewIdLayoutSearchPhoneResult())
                 } else {
-                    findViewIdSetText("com.tencent.wework:id/ghu", mRunningTask!!.phone)
+                    findViewIdSetText(getViewIdEdSearchPhone(), mRunningTask!!.phone)
                 }
             }
             if (ACTIVITY_CONTACT_SEND_EXISTS == mTopActivityName) {
@@ -147,7 +140,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     { pressBack() },
                     2000
                 )
-                uploadStatus(phone, name, "已经是好友")
+                TaskManager.onTaskEnd(phone, name, STATUS_ALREADY_FRIEND)
             }
             if (ACTIVITY_FRIEND_COMPANY_DETAIL == mTopActivityName) {
                 // 已存在，上报已存在
@@ -159,7 +152,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     { pressBack() },
                     2000
                 )
-                uploadStatus(phone, name, "企业微信用户不加好友")
+                TaskManager.onTaskEnd(phone, name, STATUS_WEWORK_FRIEND)
             }
             if (ACTIVITY_FRIEND_COMPANY == mTopActivityName) {
                 // 已存在，上报已存在
@@ -171,12 +164,13 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     { pressBack() },
                     2000
                 )
-                uploadStatus(phone, name, "已经是企业微信好友")
+//                uploadStatus(phone, name, "已经是企业微信好友")
+                TaskManager.onTaskEnd(phone, name, STATUS_ALREADY_WEWORK_FRIEND)
             }
             if (ACTIVITY_CONTACT_INFO == mTopActivityName) {
-                val hasAdd = checkViewsIdExists("com.tencent.wework:id/h2")
-                mRunningTask!!.name = findViewIdText("com.tencent.wework:id/hfb")
-                val view = findViewIdFirst("com.tencent.wework:id/g5s")
+                val hasAdd = checkViewsIdExists(getViewContactInfoAddBtn())
+                mRunningTask!!.name = findViewIdText(getViewContactInfoName())
+                val view = findViewIdFirst(getViewContactInfoPhone())
                 if (!hasAdd || view == null){
                     pressBack()
 
@@ -184,32 +178,34 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                 }
                 if (hasAdd) {
                     if (view.getChild(0).text.toString() == mRunningTask!!.phone) {
-                        findViewIdClick("com.tencent.wework:id/h2")
+                        findViewIdClick(getViewContactInfoAddBtn())
                     } else {
                         pressBack()
-                        mHandler.postDelayed({pressBack()}, Util.randomInt(500, 1000))
+                        mHandler.postDelayed({pressBack()}, RandUtil.randomInt(500, 1000))
                     }
                 }
             }
             if (ACTIVITY_CONTACT_SEND_VERIFY == mTopActivityName) {
-                if (findViewsById("com.tencent.wework:id/ahx") == null) {
-                    findViewIdParentClick("com.tencent.wework:id/ahz")
-                } else {
-                    val views = findViewsById("com.tencent.wework:id/ahx")
-                    if (views != null && views[0].text.toString() != mRunningTask!!.content) {
-                        findViewIdSetText("com.tencent.wework:id/ahx", mRunningTask?.content)
-                        pressBack()
-                    } else if (findViewIdClick("com.tencent.wework:id/d12")) {
+                if (companyName == "") {
+                    companyName = findViewIdText(getViewSendVerifyCompany()) ?: ""
+                }
+                val welcomeText = findViewIdText(getViewSendVerifyWelcome())
+                if (welcomeText == mRunningTask?.content) {
+                    if (findViewIdClick(getViewSendVerifyButton())) {
                         val phone = mRunningTask!!.phone
                         val name = mRunningTask!!.name
                         mRunningTask = null
-//                            inputTap(300 + Random().nextInt(500), 720)
-//                            pressBack()
-                        mHandler.postDelayed({pressBack()},Util.randomLong(500,1000))
-                        mHandler.postDelayed({pressBack()},Util.randomLong(2000,3000))
+                        mHandler.postDelayed({pressBack()},
+                            RandUtil.randomLong(500,1000))
+                        mHandler.postDelayed({pressBack()},
+                            RandUtil.randomLong(2000,3000))
                         // 上报成功
-                        uploadStatus(phone, name, "添加成功")
+                        TaskManager.onTaskEnd(phone, name, STATUS_SUCCESS)
                     }
+                } else {
+                    findViewIdClick(getViewSendVerifyWelcome())
+                    mHandler.postDelayed({findViewIdSetText("com.tencent.wework:id/ahx", mRunningTask?.content)
+                        pressBack()}, RandUtil.randomInt(1000,3000))
                 }
             }
         }
@@ -310,19 +306,21 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val packageName = event.packageName.toString()
-        if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            if (event.packageName != null && event.className != null) {
-                if ("com.tencent.wework" == packageName) {
-                    mTopPackageName = event.packageName.toString()
-                    if (event.className.toString().endsWith("Activity")) {
-                        mTopActivityName = event.className.toString()
+        if (packageName == WEWORK_PACKAGE) {
+            Log.d("cuiqing", "onAccessibilityEvent event:${event.eventType} ${event.text}  ${event.source?.viewIdResourceName}")
+            if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+                if (event.packageName != null && event.className != null) {
+                    if ("com.tencent.wework" == packageName) {
+                        mTopPackageName = event.packageName.toString()
+                        if (event.className.toString().endsWith("Activity")) {
+                            mTopActivityName = event.className.toString()
+                        }
+                    } else {
+                        if ("com.sohu.inputmethod.sogou.xiaomi" != packageName) {
+                            mTopPackageName = null
+                            mTopActivityName = null
+                        }
                     }
-                } else {
-                    if ("com.sohu.inputmethod.sogou.xiaomi" != packageName) {
-                        mTopPackageName = null
-                        mTopActivityName = null
-                    }
-                }
 //                                ComponentName componentName = new ComponentName(
 //                        event.getPackageName().toString(),
 //                        event.getClassName().toString()
@@ -332,6 +330,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 //                boolean isActivity = activityInfo != null;
 //                if (isActivity)
 //                    Log.i(TAG, "top activity"+ componentName.flattenToShortString());
+                }
             }
         }
 
@@ -388,12 +387,12 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     };
 
     @RequiresApi(Build.VERSION_CODES.N)
-    fun tapViewById(viewId: String) {
+    fun tapViewById(viewId: String?) {
         val view = findViewIdFirst(viewId)
         val rect = Rect()
         view?.let {
             it.getBoundsInScreen(rect)
-            inputTap(Util.randomInt(rect.left, rect.right).toFloat(), Util.randomInt(rect.top, rect.bottom).toFloat())
+            inputTap(RandUtil.randomInt(rect.left, rect.right).toFloat(), RandUtil.randomInt(rect.top, rect.bottom).toFloat())
         }
     }
     @RequiresApi(Build.VERSION_CODES.N)
@@ -406,7 +405,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     /**
      * 查找viewid,并点击，如果有多个，则点击第一个
      */
-    private fun findViewIdClick(viewId: String): Boolean {
+    private fun findViewIdClick(viewId: String?): Boolean {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =
@@ -438,7 +437,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     /**
      * 根据viewid查找第一个找到的控件
      */
-    private fun findViewIdFirst(viewId: String): AccessibilityNodeInfo? {
+    private fun findViewIdFirst(viewId: String?): AccessibilityNodeInfo? {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =
@@ -451,7 +450,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     /**
      * 获取第一个viewid的文本
      */
-    private fun findViewIdText(viewId: String): String? {
+    private fun findViewIdText(viewId: String?): String? {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =
@@ -461,7 +460,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
         return null
     }
 
-    private fun findViewIdSetText(viewId: String, content: String?): Boolean {
+    private fun findViewIdSetText(viewId: String?, content: String?): Boolean {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =
@@ -486,6 +485,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 
     /**
      * 根据文本查找view
+     * 查找安装,并模拟点击(findAccessibilityNodeInfosByText判断逻辑是contains而非equals)
      */
     private fun findViewByText(text: String): Boolean {
         val rootNode = rootInActiveWindow
@@ -498,19 +498,35 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
     }
 
     /**
+     * 根据文本查找view
+     * 查找安装,并模拟点击(findAccessibilityNodeInfosByText判断逻辑是contains而非equals)
+     */
+    private fun findViewsByText(text: String): List<AccessibilityNodeInfo>? {
+        val rootNode = rootInActiveWindow
+        if (rootNode != null) {
+            val nodes =
+                rootNode.findAccessibilityNodeInfosByText(text)
+            if (!nodes.isNullOrEmpty()) {
+                return nodes
+            }
+        }
+        return null
+    }
+
+    /**
      * 检测view是否可见
      */
-    private fun checkViewsIdExists(viewId: String): Boolean {
+    private fun checkViewsIdExists(viewId: String?): Boolean {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =
                 rootNode.findAccessibilityNodeInfosByViewId(viewId)
-            return nodes != null && !nodes.isEmpty()
+            return nodes != null && nodes.isNotEmpty()
         }
         return false
     }
 
-    private fun findViewsById(viewId: String): List<AccessibilityNodeInfo>? {
+    private fun findViewsById(viewId: String?): List<AccessibilityNodeInfo>? {
         val rootNode = rootInActiveWindow
         if (rootNode != null) {
             val nodes =

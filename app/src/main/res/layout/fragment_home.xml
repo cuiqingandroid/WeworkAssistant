@@ -44,9 +44,9 @@
                     android:id="@+id/tvPrefixRoot"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-
-                    android:text="root权限:"
-                    android:textSize="18sp" />
+                    android:text="企业微信版本:"
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
 
                 <TextView
                     android:id="@+id/tvRootStatus"
@@ -73,7 +73,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="辅助状态:"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:textStyle="bold"/>
 
                 <TextView
                     android:id="@+id/tvAccessStatus"
@@ -99,6 +100,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="悬浮窗权限:"
+                    android:textStyle="bold"
                     android:textSize="18sp" />
 
                 <TextView

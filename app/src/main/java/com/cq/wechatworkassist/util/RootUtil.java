@@ -1,4 +1,4 @@
-package com.cq.wechatworkassist;
+package com.cq.wechatworkassist.util;
 
 import android.util.Log;
 
@@ -11,10 +11,13 @@ import java.io.InputStreamReader;
 /**
  * 判断Android设备是否拥有Root权限
  */
-public class RootCheck {
+public class RootUtil {
 
     private final static String TAG = "RootUtil";
 
+    /**
+     * 手机是否root
+     */
     public static boolean isRoot() {
         String binPath = "/system/bin/su";
         String xBinPath = "/system/xbin/su";

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 
-public class WindowManager {
+public class PermissionManager {
 
     public static boolean checkFloatPermission(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

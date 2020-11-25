@@ -7,15 +7,14 @@ import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
-import com.cq.wechatworkassist.ui.widget.RecordScreenView
+import com.cq.wechatworkassist.task.TaskManager
+import com.cq.wechatworkassist.ui.widget.FloatControllerView
 import com.cq.wechatworkassist.util.UiUtil
 
 /**
- * Created by wangxiandeng on 2016/11/25.
  */
 object FloatWindowManager {
-    private var mBallView: RecordScreenView? = null
-    private var mWindowManager: WindowManager? = null
+    private var mBallView: FloatControllerView? = null
     fun addBallView(context: Context) {
         if (mBallView == null) {
             val windowManager =
@@ -23,7 +22,7 @@ object FloatWindowManager {
             val screenWidth = windowManager!!.defaultDisplay.width
             val screenHeight = windowManager.defaultDisplay.height
             mBallView =
-                RecordScreenView(context)
+                FloatControllerView(context)
             val params =
                 WindowManager.LayoutParams()
             params.x = UiUtil.dp2px(context, 15)
@@ -40,7 +39,6 @@ object FloatWindowManager {
             params.format = PixelFormat.RGBA_8888
             params.flags = (WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                     or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-//            mBallView!!.setLayoutParams(params)
             windowManager.addView(mBallView, params)
             if (TaskManager.isRunning) {
                 setImageRes(R.drawable.ic_pause)
@@ -85,16 +83,12 @@ object FloatWindowManager {
         if (mBallView != null) {
             val windowManager =
                 getWindowManager(context)
-            windowManager!!.removeView(mBallView)
+            windowManager.removeView(mBallView)
             mBallView = null
         }
     }
 
-    private fun getWindowManager(context: Context): WindowManager? {
-        if (mWindowManager == null) {
-            mWindowManager =
-                context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        }
-        return mWindowManager
+    private fun getWindowManager(context: Context): WindowManager {
+        return context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
 }

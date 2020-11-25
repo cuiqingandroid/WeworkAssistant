@@ -1,25 +1,23 @@
-package com.cq.wechatworkassist
+package com.cq.wechatworkassist.task
 
-import android.content.Context
+import com.cq.wechatworkassist.AccessibilityService
 import com.cq.wechatworkassist.db.DBTask
 
 object TaskManager {
 
-    private lateinit var mContext: Context
-
     var isRunning: Boolean = false
-
-    fun init(context: Context) {
-        mContext = context.applicationContext
-    }
 
     fun importData(taskList: List<Task>) {
         DBTask.insertTasks(taskList)
     }
 
-    fun onTaskEnd(task: String, name:String?, status: String) {
-        DBTask.updatePhoneStatus(task, name, status)
-        if (isRunning) {
+    fun onTaskEnd(task: String, name:String?, status: Int) {
+        if (STATUS_OPERATION_LIMIT != status) {
+            DBTask.updatePhoneStatus(task, name, status)
+        }
+        if (STATUS_OPERATION_LIMIT == status){
+            stop()
+        } else if (isRunning) {
             val undoneTask = DBTask.queryUnDoneTask()
             if (undoneTask != null) {
                 AccessibilityService.service?.startTask(undoneTask)

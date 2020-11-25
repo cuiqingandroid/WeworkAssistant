@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.cq.wechatworkassist.ui.MainActivity">
     <item
-        android:id="@+id/action_add"
+        android:id="@+id/action_select"
         android:orderInCategory="100"
-        android:title="添加任务"
+        android:title="选择文件"
         app:showAsAction="never" />
 </menu>

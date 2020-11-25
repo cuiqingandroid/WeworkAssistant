@@ -1,6 +1,7 @@
 package com.cq.wechatworkassist.ui.task
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
@@ -9,22 +10,21 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.*
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cq.wechatworkassist.R
-import com.cq.wechatworkassist.Task
-import com.cq.wechatworkassist.TaskManager
-import com.cq.wechatworkassist.Util
+import com.cq.wechatworkassist.task.Task
+import com.cq.wechatworkassist.task.TaskManager
 import com.cq.wechatworkassist.util.MD5Tools
 import com.tbruyelle.rxpermissions2.RxPermissions
 import kotlinx.android.synthetic.main.adapter_item_task.view.*
 import kotlinx.android.synthetic.main.fragment_tasks.view.*
-import java.io.*
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 
 class TaskFragment : Fragment() {
@@ -36,19 +36,8 @@ class TaskFragment : Fragment() {
         galleryViewModel =
             ViewModelProviders.of(this).get(GalleryViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_tasks, container, false)
-        val textView = root.findViewById<TextView>(R.id.text_gallery)
-        galleryViewModel!!.text.observe(
-            viewLifecycleOwner,
-            Observer { s: String? -> textView.text = s }
-        )
-        textView.setOnClickListener {
-            val rxPermissions = RxPermissions(requireActivity())
-            rxPermissions.requestEach( Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .subscribe {
-                    openSystemFile()
-                }
-        }
         refreshData()
+        setHasOptionsMenu(true)
         return root
     }
 
@@ -57,11 +46,6 @@ class TaskFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         view.recyclerView.adapter = mAdapter
         view.recyclerView.layoutManager = LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
-        inflater.inflate(R.menu.menu_task, menu)
     }
 
     private fun openSystemFile() {
@@ -108,7 +92,8 @@ class TaskFragment : Fragment() {
                     if (TextUtils.isEmpty(it)) return@forEach
                     var array = it.trim().split(",")
                     if (TextUtils.isEmpty(array[1])) return@forEach
-                    var task = Task(array[0], array[1])
+                    var task =
+                        Task(array[0], array[1])
                     result.add(task)
                 }
             }
@@ -116,9 +101,21 @@ class TaskFragment : Fragment() {
             refreshData()
         }
     }
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.action_add) {
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.menu_task, menu)
+    }
+
+
+    @SuppressLint("CheckResult")
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_select) {
+            val rxPermissions = RxPermissions(requireActivity())
+            rxPermissions.requestEach( Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe {
+                    openSystemFile()
+                }
             return true
         }
         return super.onOptionsItemSelected(item)

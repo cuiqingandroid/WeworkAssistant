@@ -1,7 +1,9 @@
-package com.cq.wechatworkassist
+package com.cq.wechatworkassist.server
 
 import android.content.Context
 import android.util.Log
+import com.cq.wechatworkassist.task.Task
+import com.cq.wechatworkassist.task.TaskInterface
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONObject
 
@@ -33,7 +35,9 @@ class HttpServer(port: Int, private val context: Context) : NanoHTTPD(port) {
                 if (phone.isNullOrBlank() || msg.isNullOrEmpty()) {
                     return makeErrResponse("手机号和内容不能为空")
                 }
-                val success  = (context as TaskInterface).startTask(Task(phone, msg))
+                val success  = (context as TaskInterface).startTask(
+                    Task(phone, msg)
+                )
 //                val intent = Intent("add_task")
 //                intent.putExtra("tasks","$phone,$msg")
 //                context.sendBroadcast(intent)
