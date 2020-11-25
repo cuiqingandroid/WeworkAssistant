@@ -16,6 +16,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.annotation.RequiresApi
 import com.cq.wechatworkassist.task.*
+import com.cq.wechatworkassist.util.ExceptionUtil
 import com.cq.wechatworkassist.util.RandUtil
 import com.cq.wechatworkassist.wework.*
 
@@ -31,9 +32,11 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
         @RequiresApi(Build.VERSION_CODES.N)
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
-            if (!checkUi()) {
-                removeMessages(0)
-                sendEmptyMessageDelayed(0, RandUtil.randomInt(1500, 3000))
+            ExceptionUtil.tryVerbosely {
+                if (!checkUi()) {
+                    removeMessages(0)
+                    sendEmptyMessageDelayed(0, RandUtil.randomInt(1500, 3000))
+                }
             }
         }
     }
@@ -47,7 +50,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 //            }
 //            mTopActivityName = tryGetActivity()
             if (rootInActiveWindow == null){
-                inputTap(RandUtil.randomInt(700).toFloat(), RandUtil.randomInt(120).toFloat())
+                inputTap(RandUtil.randomInt(700).toFloat(), RandUtil.randomInt(500,1000).toFloat())
                 mHandler.sendEmptyMessageDelayed(0, RandUtil.randomLong(500))
                 return true
             }
@@ -93,7 +96,8 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                 }
             }
             if (ACTIVITY_FRIEND_ADD_MULTI == mTopActivityName) {
-                findViewIdClick("com.tencent.wework:id/bs9")
+//                findViewIdClick("com.tencent.wework:id/bs9")
+                tapViewById(getViewMultiWechat())
             }
             if (ACTIVITY_ADD_FRIEND_SEARCH == mTopActivityName) {
                 if (findViewByText(WEWORK_UI_TEXT_OPERATION_LIMIT)) {
@@ -177,7 +181,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     return false
                 }
                 if (hasAdd) {
-                    if (view.getChild(0).text.toString() == mRunningTask!!.phone) {
+                    if (view.getChild(1).text.toString() == mRunningTask!!.phone) {
                         findViewIdClick(getViewContactInfoAddBtn())
                     } else {
                         pressBack()
@@ -203,9 +207,11 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                         TaskManager.onTaskEnd(phone, name, STATUS_SUCCESS)
                     }
                 } else {
-                    findViewIdClick(getViewSendVerifyWelcome())
-                    mHandler.postDelayed({findViewIdSetText("com.tencent.wework:id/ahx", mRunningTask?.content)
-                        pressBack()}, RandUtil.randomInt(1000,3000))
+                    tapViewById(getViewSendVerifyWelcomeParent())
+//                    mHandler.postDelayed({
+                        findViewIdSetText(getViewSendVerifyWelcome(), mRunningTask?.content)
+//                        pressBack()
+//                    }, RandUtil.randomInt(1000,3000))
                 }
             }
         }

@@ -30,6 +30,11 @@ object TaskManager {
     fun getAllTask(): List<Task>{
         return DBTask.queryTasks()
     }
+
+    fun deleteTask(task: Task) {
+        DBTask.deleteTask(task.phone)
+    }
+
     fun start() : Boolean{
         isRunning = true
         val undoneTask = DBTask.queryUnDoneTask()

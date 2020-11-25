@@ -3,6 +3,7 @@ package com.cq.wechatworkassist.ui.task
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -10,17 +11,20 @@ import android.os.Bundle
 import android.text.TextUtils
 import android.util.Log
 import android.view.*
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.cq.wechatworkassist.R
-import com.cq.wechatworkassist.task.Task
-import com.cq.wechatworkassist.task.TaskManager
+import com.cq.wechatworkassist.db.DBTask
+import com.cq.wechatworkassist.task.*
 import com.cq.wechatworkassist.util.MD5Tools
 import com.tbruyelle.rxpermissions2.RxPermissions
 import kotlinx.android.synthetic.main.adapter_item_task.view.*
+import kotlinx.android.synthetic.main.adapter_item_task.view.phone
+import kotlinx.android.synthetic.main.dialog_input_phone.view.*
 import kotlinx.android.synthetic.main.fragment_tasks.view.*
 import java.io.File
 import java.io.FileInputStream
@@ -117,14 +121,26 @@ class TaskFragment : Fragment() {
                     openSystemFile()
                 }
             return true
+        } else if (item.itemId == R.id.action_input) {
+            val alertDialog = AlertDialog.Builder(activity)
+            val view = LayoutInflater.from(activity).inflate(R.layout.dialog_input_phone, null)
+            alertDialog.setView(view)
+            alertDialog.setPositiveButton("确定"
+            ) { _, _ -> kotlin.run{
+                DBTask.insertTasks(listOf(Task(view.phone.text.toString(), view.content.text.toString())))
+                refreshData()
+            }}
+            alertDialog.setNegativeButton("取消", null)
+            alertDialog.show()
         }
         return super.onOptionsItemSelected(item)
     }
 
-    private var mData: List<Task>? = null
+    private var mData = mutableListOf<Task>()
 
     fun refreshData(){
-        mData = TaskManager.getAllTask()
+        mData.clear()
+        mData.addAll(TaskManager.getAllTask())
         mAdapter.notifyDataSetChanged()
     }
     private inner class MyAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -138,17 +154,44 @@ class TaskFragment : Fragment() {
         }
 
         override fun getItemCount(): Int {
-            return mData?.size ?: 0
+            return mData.size ?: 0
         }
 
         private inner class MyViewHolder internal constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            init {
+                itemView.setOnLongClickListener { view ->
+                    val popup = PopupMenu(activity, view)
+                    //Inflating the Popup using xml file
+                    popup.menuInflater.inflate(R.menu.task_menu, popup.menu)
+
+                    //registering popup with OnMenuItemClickListener
+                    popup.setOnMenuItemClickListener {
+                        val task = view.tag as Task
+                        mData.removeIf { it.phone == task.phone }
+                        mAdapter.notifyDataSetChanged()
+                        TaskManager.deleteTask(task)
+                        true
+                    }
+
+                    popup.show()
+                    true
+                }
+            }
+
             fun bindData(task: Task?) {
                 itemView.phone.text = task?.phone
-                itemView.status.text = task?.status
                 itemView.desc.text = task?.content
                 if (task?.name != null) {
                     itemView.name.text = task.name
                 }
+                when(task?.status?.toInt()){
+                    STATUS_SUCCESS -> itemView.status.text = "发送成功"
+                    STATUS_ALREADY_FRIEND -> itemView.status.text = "已经是好友"
+                    STATUS_ALREADY_WEWORK_FRIEND -> itemView.status.text = "已是企业微信好友"
+                    STATUS_UNKNOWN_PHONE -> itemView.status.text = "手机号查不到"
+                    STATUS_WEWORK_FRIEND -> itemView.status.text = "只有企业微信不加好友"
+                }
+                itemView.tag = task
             }
 
         }

@@ -131,6 +131,7 @@ fun getViewContactInfoName() : String? {
     }
 }
 
+
 /**
  * 发送好友验证，企业名称
  */
@@ -142,11 +143,31 @@ fun getViewSendVerifyCompany() : String? {
     }
 }
 /**
+ * 搜索结果包含微信好友和企业微信好友，【绿微信那一条的id】
+ */
+fun getViewMultiWechat() : String? {
+    return when (WEWORK_VERSION){
+        VERSION_3036 -> "com.tencent.wework:id/bum"
+        VERSION_3031 -> "com.tencent.wework:id/hfb"
+        else -> null
+    }
+}
+/**
  * 发送好友验证，【添加语】
  */
 fun getViewSendVerifyWelcome() : String? {
     return when (WEWORK_VERSION){
         VERSION_3036 -> "com.tencent.wework:id/coa"
+        VERSION_3031 -> "com.tencent.wework:id/ahx"
+        else -> null
+    }
+}
+/**
+ * 发送好友验证，【添加语】
+ */
+fun getViewSendVerifyWelcomeParent() : String? {
+    return when (WEWORK_VERSION){
+        VERSION_3036 -> "com.tencent.wework:id/ait"
         VERSION_3031 -> "com.tencent.wework:id/ahx"
         else -> null
     }

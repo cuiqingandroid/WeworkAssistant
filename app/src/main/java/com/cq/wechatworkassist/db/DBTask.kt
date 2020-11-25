@@ -36,6 +36,9 @@ object DBTask {
             val db = SqlHelper.getWritableDatabase()
             for (task in tasks) {
                 val cv = ContentValues()
+                if (task.phone.isNullOrBlank()) {
+                    continue
+                }
                 cv.put(Column.PHONE, task.phone)
                 cv.put(Column.CONTENT, task.content)
                 db.insertWithOnConflict(TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_IGNORE)
@@ -45,6 +48,7 @@ object DBTask {
             Log.d("cuiqing", "插入数据库异常")
         }
     }
+
 
     fun queryTasks(): List<Task> {
         try {
@@ -96,7 +100,22 @@ object DBTask {
             cv.put(Column.PHONE, phone)
             cv.put(Column.NAME, name?: "")
             cv.put(Column.STATUS, status)
-            db.insertWithOnConflict(TABLE_NAME, null, cv, SQLiteDatabase.CONFLICT_REPLACE)
+            db.update(TABLE_NAME, cv, "${Column.PHONE}=?", arrayOf(phone))
+        } catch (e: Throwable) {
+            //因为goods_id是唯一的，所以相同会失败，捕获异常
+            Log.d("cuiqing", "插入数据库异常")
+        }
+    }
+
+    /**
+     * 删除任务
+     */
+    fun deleteTask(phone: String) {
+        try {
+            val db = SqlHelper.getWritableDatabase()
+            val cv = ContentValues()
+            cv.put(Column.PHONE, phone)
+            db.delete(TABLE_NAME, "${Column.PHONE}=?", arrayOf(phone))
         } catch (e: Throwable) {
             //因为goods_id是唯一的，所以相同会失败，捕获异常
             Log.d("cuiqing", "插入数据库异常")

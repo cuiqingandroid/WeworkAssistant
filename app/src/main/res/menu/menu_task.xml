@@ -7,4 +7,9 @@
         android:orderInCategory="100"
         android:title="选择文件"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_input"
+        android:orderInCategory="100"
+        android:title="直接输入"
+        app:showAsAction="never" />
 </menu>
