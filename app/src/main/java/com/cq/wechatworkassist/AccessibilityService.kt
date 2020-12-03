@@ -50,7 +50,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
 //            }
 //            mTopActivityName = tryGetActivity()
             if (rootInActiveWindow == null){
-                inputTap(RandUtil.randomInt(700).toFloat(), RandUtil.randomInt(500,1000).toFloat())
+                inputTap(RandUtil.randomInt(700).toFloat(), RandUtil.randomInt(0,100).toFloat())
                 mHandler.sendEmptyMessageDelayed(0, RandUtil.randomLong(500))
                 return true
             }
@@ -76,8 +76,8 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
             mTopActivityName?.apply {
                 if (!ACTIVITY_MAP.contains(this)) {
                     pressBack()
+                    return false
                 }
-                return false
             }
             FloatWindowManager.setText("正在运行${mRunningTask?.phone}")
             if (ACTIVITY_MAIN == mTopActivityName) {
@@ -190,7 +190,7 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
                     return false
                 }
                 if (hasAdd) {
-                    if (view.getChild(1).text.toString() == mRunningTask!!.phone) {
+                    if (findViewByText(mRunningTask!!.phone)) {
                         findViewIdClick(getViewContactInfoAddBtn())
                         mRunningTask?.hasSearched = true
                     } else {
@@ -316,8 +316,11 @@ class AccessibilityService : android.accessibilityservice.AccessibilityService()
      */
     private fun isRootFullscreen() : Boolean{
         val rect = Rect()
-        rootInActiveWindow.getBoundsInScreen(rect)
-        return rect.bottom > 500
+        if (rootInActiveWindow != null) {
+            rootInActiveWindow.getBoundsInScreen(rect)
+            return rect.bottom > 500
+        }
+        return false
     }
 
 

@@ -163,12 +163,12 @@ fun getViewSendVerifyWelcome() : String? {
     }
 }
 /**
- * 发送好友验证，【添加语】
+ * 发送好友验证，【添加语】父布局
  */
 fun getViewSendVerifyWelcomeParent() : String? {
     return when (WEWORK_VERSION){
         VERSION_3036 -> "com.tencent.wework:id/ait"
-        VERSION_3031 -> "com.tencent.wework:id/ahx"
+        VERSION_3031 -> "com.tencent.wework:id/ahw"
         else -> null
     }
 }

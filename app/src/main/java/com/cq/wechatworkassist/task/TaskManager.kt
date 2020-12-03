@@ -1,6 +1,8 @@
 package com.cq.wechatworkassist.task
 
 import com.cq.wechatworkassist.AccessibilityService
+import com.cq.wechatworkassist.App
+import com.cq.wechatworkassist.FloatWindowManager
 import com.cq.wechatworkassist.db.DBTask
 
 object TaskManager {
@@ -50,6 +52,7 @@ object TaskManager {
 
     fun stop(): Boolean {
         isRunning = false
+        FloatWindowManager.removeBallView(App.mApp)
         return AccessibilityService.service?.stop() ?: false
     }
 }
